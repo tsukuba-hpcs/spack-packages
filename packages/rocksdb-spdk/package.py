@@ -23,7 +23,7 @@
 from spack.package import *
 
 
-class RocksdbSpdk(CMakePackage):
+class RocksdbSpdk(MakefilePackage):
     """FIXME: Put a proper description of your package here."""
 
     homepage = "https://spdk.io/doc/blobfs.html"
@@ -37,8 +37,3 @@ class RocksdbSpdk(CMakePackage):
 
     # FIXME: Add dependencies if required.
     # depends_on("foo")
-
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make('static_lib')
-        make('install')
