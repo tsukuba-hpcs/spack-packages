@@ -21,12 +21,13 @@
 # ----------------------------------------------------------------------------
 
 from spack.package import *
-
+import llnl.util.filesystem as fs
 
 class RocksdbSpdk(MakefilePackage):
     """FIXME: Put a proper description of your package here."""
 
-    homepage = "https://spdk.io/doc/blobfs.html"
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "https://www.example.com"
     url = "https://github.com/spdk/rocksdb/archive/refs/heads/6.15.fb.zip"
 
     # FIXME: Add a list of GitHub accounts to
@@ -35,5 +36,21 @@ class RocksdbSpdk(MakefilePackage):
 
     version("6.15.fb", sha256="cdb4e9f50411e70c20a2018bda5d251c39c5b9b34ceb9c037071e7ad26eef78a")
 
+    resource(
+            name="spdk",
+            git="https://github.com/spdk/spdk",
+            )
+
     # FIXME: Add dependencies if required.
     # depends_on("foo")
+
+    def edit(self, spec, prefix):
+        # FIXME: Edit the Makefile if necessary
+        # FIXME: If not needed delete this function
+        # makefile = FileFilter("Makefile")
+        # makefile.filter("CC = .*", "CC = cc")
+        with fs.working_dir(self.build_directory + '/spdk'):
+            configure = which('./configure')
+            print(configure())
+
+    build_targets = ['static_lib']
