@@ -30,7 +30,4 @@ class Finchfs(AutotoolsPackage):
         if '+pmemkv' in self.spec:
             args.extend(['--with-pmemkv'])
 
-        if '+zero_copy_read_rdma' in self.spec:
-            args.extend(['--enable-zero-copy-read-rdma'])
-
         return args
