@@ -10,3 +10,4 @@ spack repo add ./spack-packages
 ## Packages
 
 - `rocksdb-spdk` rocksdb with spdk integration
+- `finchfs` ad hoc parallel file system for HPC
