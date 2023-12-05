@@ -9,5 +9,10 @@ spack repo add ./spack-packages
 
 ## Packages
 
-- `rocksdb-spdk` rocksdb with spdk integration
+- `chfs`
 - `finchfs` ad hoc parallel file system for HPC
+- `ior`
+- `ndctl`
+- `pmdk`
+- `rdbench`
+- `rocksdb-spdk` rocksdb with spdk integration
