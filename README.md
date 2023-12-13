@@ -14,5 +14,10 @@ spack repo add ./spack-packages
 - `ior`
 - `ndctl`
 - `pmdk`
+- `pmemkv`
+- `libpmemobj-cpp`
 - `rdbench`
 - `rocksdb-spdk` rocksdb with spdk integration
+- `libtraceevent`
+- `libtracefs`
+- `libudev`
