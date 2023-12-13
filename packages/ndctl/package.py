@@ -1,32 +1,35 @@
 from spack.package import *
 
 
-class Ndctl(Package):
+class Ndctl(MesonPackage):
     """ndctl: A "device memory" enabling project encompassing tools and libraries
     for CXL, NVDIMMs, DAX, memory tiering and other platform memory device topics.
     """
 
     homepage = "https://github.com/pmem/ndctl"
-    has_code = False
+    url = "https://github.com/pmem/ndctl/archive/v78.tar.gz"
 
     maintainers("range3")
 
-    version("78")
+    version("78", sha256="80596932920a3eb42551fc0d978f22bfa6a620f57af60c898dc0d0e303c086a5")
 
-    # ndctl needs to be added as an external package to SPACK. For this, the
-    # config file packages.yaml needs to be adjusted:
-    #
-    # packages:
-    #   ndctl:
-    #     buildable: False
-    #     externals:
-    #     - spec: ndctl@78
-    #       prefix: /usr
+    depends_on('kmod')
+    depends_on('libuuid')
+    depends_on('json-c')
+    depends_on('libtraceevent')
+    depends_on('libtracefs')
+    depends_on('iniparser')
+    depends_on('libudev')
 
-    def install(self, spec, prefix):
-        raise InstallError(
-            self.spec.format(
-                "{name} is not installable, you need to specify "
-                "it as an external package in packages.yaml"
-            )
-        )
+    depends_on('pkgconfig', type=('build'))
+
+    def meson_args(self):
+        args = [
+                f"-Drootprefix={self.prefix}",
+                f"-Diniparserdir={self.spec['iniparser'].prefix.include}",
+                f"-Dsysconfdir={self.prefix.etc}",
+                "-Dbashcompletiondir=no",
+                "-Ddocs=disabled",
+                "-Dsystemd=disabled",
+                ]
+        return args
