@@ -20,6 +20,7 @@ class Ndctl(MesonPackage):
     depends_on('libtracefs')
     depends_on('iniparser')
     depends_on('libudev')
+    depends_on('keyutils')
 
     depends_on('pkgconfig', type=('build'))
 
