@@ -10,6 +10,9 @@ class Libtracefs(MakefilePackage):
 
     version("1.7.0", sha256="411fcbf3434ecbaefa6c2b1bf092266293a672e2d7ee46fdd6b402753cb8bd16")
 
+    depends_on("libtraceevent@1.3:")
+    depends_on("pkgconfig", type="build")
+
     conflicts("platform=darwin", msg="Linux-only")
 
     def install(self, spec, prefix):
