@@ -21,6 +21,7 @@ class OpenmpiPeanuts(BuiltinOpenmpi):
     depends_on("libtool @2.4.2:", type="build", when="@5.0.0rc12-peanuts,main")
     depends_on("m4", type="build", when="@5.0.0rc12-peanuts,main")
     depends_on("libevent@2:", when="@5.0.0rc12-peanuts,main")
+    depends_on("flex", when="@5.0.0rc12-peanuts")
 
     @when("@5.0.0rc12-peanuts,main")
     def autoreconf(self, spec, prefix):
