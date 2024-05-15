@@ -12,8 +12,8 @@ class Peanuts(CMakePackage):
     a binding library for the c language."""
 
     homepage = "https://github.com/tsukuba-hpcs/peanuts"
-    # url = ""
-    git      = "https://github.com/tsukuba-hpcs/peanuts.git"
+    url = "https://github.com/tsukuba-hpcs/peanuts/archive/v0.1.0-1.tar.gz"
+    git = "https://github.com/tsukuba-hpcs/peanuts.git"
 
     maintainers("range3")
 
@@ -22,6 +22,11 @@ class Peanuts(CMakePackage):
     variant("profiler", default=False, description="enable profiler")
 
     version("master", branch="master")
+    version(
+        "1.0.0",
+        sha256="a3b6b6599ff95b91ce69a5f5e1970d27461d87711630e002bd16c46f88fd0426",
+        preferred=True,
+    )
     version("0.10.3", tag="v0.10.3")
 
     depends_on("mpi")
