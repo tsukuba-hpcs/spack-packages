@@ -1,7 +1,7 @@
 from spack.package import *
 
 
-class ChfsRocksDB(AutotoolsPackage):
+class ChfsRocksdb(AutotoolsPackage):
     '''CHFS parallel and distributed file system for node-local persistent memory'''
 
     homepage = 'https://github.com/onokatio/chfs-rocksdb'
