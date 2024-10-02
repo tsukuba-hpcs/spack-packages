@@ -14,7 +14,7 @@ class Ndctl(MesonPackage):
     version("78", sha256="80596932920a3eb42551fc0d978f22bfa6a620f57af60c898dc0d0e303c086a5")
 
     depends_on('kmod')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('json-c')
     depends_on('libtraceevent')
     depends_on('libtracefs')
