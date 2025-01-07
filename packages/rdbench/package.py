@@ -17,6 +17,7 @@ class Rdbench(CMakePackage):
 
     version('master', branch='master')
     
+    version('2.0.0-dev', branch='v2')
     version('0.11.1', sha256='702c45f01ac971dc286f21eae919e72fdca228cb4ea4682c31afcb8269930131', preferred=True)
     version('0.11.0', sha256='f000a3e9be8d599bcca159920f4508e5cd704080b6f331fe3ec1a99dd134f6a7')
     version('0.10.2', sha256='9801d0fa804736886fa9d03e9e0e38801e581dc6bd4676e12d694461ee8b5702')
@@ -34,11 +35,19 @@ class Rdbench(CMakePackage):
     version('0.1.1', sha256='ea74c1b96b660352814038b779c361792a3ae068461db84a48dc8d11b01edff1')
     version('0.1.0-1', sha256='5239c1702df9dbdca99cef50966e8624d310f7641b8a8405571cadb948e2de15')
 
-    depends_on('mpi')
+    depends_on('mpi', type=('build', 'run'))
+    depends_on('cxxmpi', when='@2:')
+    depends_on('nlohmann-json', when='@2:')
+    depends_on('mdspan', when='@2:')
+    depends_on('cxxopts', when='@2:')
+    depends_on('fmt', when='@2:')
 
     def setup_build_environment(self, env):
         env.unset('CPM_SOURCE_CACHE')
 
     def cmake_args(self):
-        args = []
+        args = [
+            self.define("CMAKE_CXX_STANDARD", "20"),
+            self.define("CMAKE_CXX_STANDARD_REQUIRED", "ON"),
+        ]
         return args
