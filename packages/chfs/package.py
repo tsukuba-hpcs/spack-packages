@@ -11,8 +11,10 @@ class Chfs(AutotoolsPackage):
     maintainers = ['range3']
 
     version('master', branch='master')
-    version('develop', branch='master')
-    version('3.0.1', sha256='22cdb14f7875a680858895e7fe01bcc710e66357db069c207c04ad41e289e266', preferred=True)
+    version('develop', branch='develop')
+    version('cache', branch='cache')
+    version('3.0.3', sha256='3bf0926e79d120383877ea6b3f8eb3b7e04c2560b441d0b91a505a7ee9dd8ea4', preferred=True)
+    version('3.0.1', sha256='22cdb14f7875a680858895e7fe01bcc710e66357db069c207c04ad41e289e266')
     version('3.0.0', sha256='93a2399af7b3fb1a1c8df42c2cd9bd30a5d28dbbfc4714e0c72d3c2555e3f80a')
     version('2.1.2', sha256='8ab41060d43c96db98db62df05ec19335574f264bd271b745a16195b3d5b26eb')
     version('2.1.0', sha256='6cc21e9b890628eab0c8a669ec71787de6b71dd77827519e2723472d48337d63')
