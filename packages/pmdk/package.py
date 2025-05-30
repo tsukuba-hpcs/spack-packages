@@ -6,7 +6,7 @@
 from spack.package import *
 try:
     from spack_repo.builtin.packages.pmdk.package import Pmdk as BuiltinPmdk
-except:
+except ImportError:
     from spack.pkg.builtin.pmdk import Pmdk as BuiltinPmdk
 
 
