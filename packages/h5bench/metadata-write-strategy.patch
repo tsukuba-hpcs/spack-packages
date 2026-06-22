@@ -1,0 +1,200 @@
+diff --git a/commons/h5bench_util.c b/commons/h5bench_util.c
+index 33a77fb..3260644 100644
+--- a/commons/h5bench_util.c
++++ b/commons/h5bench_util.c
+@@ -709,6 +709,16 @@ _set_params(char *key, char *val_in, bench_params *params_in_out, int do_write)
+         else
+             (*params_in_out).meta_coll = 0;
+     }
++    else if (strcmp(key, "META_WRITE_STRATEGY") == 0) {
++        if (strcmp(val, "PROCESS_0_ONLY") == 0)
++            (*params_in_out).meta_write_strategy = H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY;
++        else if (strcmp(val, "DISTRIBUTED") == 0)
++            (*params_in_out).meta_write_strategy = H5AC_METADATA_WRITE_STRATEGY__DISTRIBUTED;
++        else {
++            printf("Unknown value for \"META_WRITE_STRATEGY\": %s\n", val);
++            return -1;
++        }
++    }
+     else if (strcmp(key, "COLLECTIVE_DATA") == 0) {
+         if (val[0] == 'Y' || val[0] == 'y')
+             (*params_in_out).data_coll = 1;
+@@ -962,10 +972,11 @@ bench_params_init(bench_params *params_out)
+     if (!params_out)
+         params_out = (bench_params *)calloc(1, sizeof(bench_params));
+     (*params_out).pattern_name = NULL;
+-    (*params_out).meta_coll    = 0;
+-    (*params_out).data_coll    = 0;
+-    (*params_out).asyncMode    = MODE_SYNC;
+-    (*params_out).subfiling    = 0;
++    (*params_out).meta_coll           = 0;
++    (*params_out).meta_write_strategy = -1;
++    (*params_out).data_coll           = 0;
++    (*params_out).asyncMode           = MODE_SYNC;
++    (*params_out).subfiling           = 0;
+ 
+     (*params_out).cnt_time_step         = 0;
+     (*params_out).cnt_time_step_delay   = 0;
+@@ -1121,6 +1132,10 @@ print_params(const bench_params *p)
+ 
+     printf("Mode: %s\n", p->asyncMode == MODE_SYNC ? "SYNC" : "ASYNC");
+     printf("Collective metadata operations: %s\n", p->meta_coll == 1 ? "YES" : "NO");
++    if (p->meta_write_strategy == H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY)
++        printf("Metadata write strategy: PROCESS_0_ONLY\n");
++    else if (p->meta_write_strategy == H5AC_METADATA_WRITE_STRATEGY__DISTRIBUTED)
++        printf("Metadata write strategy: DISTRIBUTED\n");
+     printf("Collective buffering for data operations: %s\n", p->data_coll == 1 ? "YES" : "NO");
+     if (p->subfiling) {
+         printf("Use Subfiling: %s\n", p->subfiling == 1 ? "YES" : "NO");
+diff --git a/commons/h5bench_util.h b/commons/h5bench_util.h
+index ca9e904..25d46b9 100644
+--- a/commons/h5bench_util.h
++++ b/commons/h5bench_util.h
+@@ -105,6 +105,7 @@ typedef struct bench_params {
+     char *             data_file_path;
+     char *             pattern_name;
+     int                meta_coll; // for write only, metadata collective
++    int                meta_write_strategy;
+     int                data_coll; // data collective
+     int                cnt_time_step;
+     int                cnt_time_step_delay;
+diff --git a/h5bench_patterns/h5bench_read.c b/h5bench_patterns/h5bench_read.c
+index 15deaff..80083f8 100644
+--- a/h5bench_patterns/h5bench_read.c
++++ b/h5bench_patterns/h5bench_read.c
+@@ -385,7 +385,7 @@ _run_benchmark_read(hid_t file_id, hid_t fapl, hid_t gapl, hid_t filespace, benc
+ }
+ 
+ void
+-set_pl(hid_t *fapl, hid_t *gapl)
++set_pl(hid_t *fapl, hid_t *gapl, int meta_write_strategy)
+ {
+     *fapl = H5Pcreate(H5P_FILE_ACCESS);
+     *gapl = H5Pcreate(H5P_GROUP_ACCESS);
+@@ -400,6 +400,13 @@ set_pl(hid_t *fapl, hid_t *gapl)
+     H5Pset_all_coll_metadata_ops(*fapl, true);
+     H5Pset_coll_metadata_write(*fapl, true);
+ #endif
++    if (meta_write_strategy >= 0) {
++        H5AC_cache_config_t cache_config;
++        cache_config.version = H5AC__CURR_CACHE_CONFIG_VERSION;
++        H5Pget_mdc_config(*fapl, &cache_config);
++        cache_config.metadata_write_strategy = meta_write_strategy;
++        H5Pset_mdc_config(*fapl, &cache_config);
++    }
+ }
+ 
+ void
+@@ -453,7 +460,7 @@ main(int argc, char *argv[])
+         subfiling = 1;
+ 
+     hid_t fapl, gapl;
+-    set_pl(&fapl, &gapl);
++    set_pl(&fapl, &gapl, params.meta_write_strategy);
+ 
+     hsize_t dims[64] = {0};
+ 
+diff --git a/h5bench_patterns/h5bench_write.c b/h5bench_patterns/h5bench_write.c
+index a715170..a47e92f 100644
+--- a/h5bench_patterns/h5bench_write.c
++++ b/h5bench_patterns/h5bench_write.c
+@@ -906,7 +906,8 @@ set_fapl()
+ }
+ 
+ hid_t
+-set_metadata(hid_t fapl, int align, unsigned long threshold, unsigned long alignment_len, int meta_collective)
++set_metadata(hid_t fapl, int align, unsigned long threshold, unsigned long alignment_len, int meta_collective,
++             int meta_write_strategy)
+ {
+     hsize_t threshold_o, alignment_len_o;
+     herr_t  ret;
+@@ -937,17 +938,20 @@ set_metadata(hid_t fapl, int align, unsigned long threshold, unsigned long align
+             printf("Collective Metadata operations: OFF\n");
+     }
+ 
+-    // Defer metadata flush
+-    if (DEFER_METADATA_FLUSH) {
++    if (DEFER_METADATA_FLUSH || meta_write_strategy >= 0) {
+         H5AC_cache_config_t cache_config;
+         cache_config.version = H5AC__CURR_CACHE_CONFIG_VERSION;
+         H5Pget_mdc_config(fapl, &cache_config);
+-        cache_config.set_initial_size  = 1;
+-        cache_config.initial_size      = 16 * M_VAL;
+-        cache_config.evictions_enabled = 0;
+-        cache_config.incr_mode         = H5C_incr__off;
+-        cache_config.flash_incr_mode   = H5C_flash_incr__off;
+-        cache_config.decr_mode         = H5C_decr__off;
++        if (DEFER_METADATA_FLUSH) {
++            cache_config.set_initial_size  = 1;
++            cache_config.initial_size      = 16 * M_VAL;
++            cache_config.evictions_enabled = 0;
++            cache_config.incr_mode         = H5C_incr__off;
++            cache_config.flash_incr_mode   = H5C_flash_incr__off;
++            cache_config.decr_mode         = H5C_decr__off;
++        }
++        if (meta_write_strategy >= 0)
++            cache_config.metadata_write_strategy = meta_write_strategy;
+         H5Pset_mdc_config(fapl, &cache_config);
+     }
+     return fapl;
+@@ -1075,7 +1079,7 @@ main(int argc, char *argv[])
+         else
+ #endif
+             H5Pset_fapl_mpio(fapl, comm, info);
+-        set_metadata(fapl, ALIGN, ALIGN_THRESHOLD, ALIGN_LEN, params.meta_coll);
++        set_metadata(fapl, ALIGN, ALIGN_THRESHOLD, ALIGN_LEN, params.meta_coll, params.meta_write_strategy);
+     }
+ 
+     void *data = _prepare_data(params, &filespace, &memspace, &data_preparation_time, &data_size);
+diff --git a/h5bench_patterns/h5bench_write_unlimited.c b/h5bench_patterns/h5bench_write_unlimited.c
+index e05ec9e..9c01bdc 100644
+--- a/h5bench_patterns/h5bench_write_unlimited.c
++++ b/h5bench_patterns/h5bench_write_unlimited.c
+@@ -876,7 +876,8 @@ set_fapl()
+ }
+ 
+ hid_t
+-set_metadata(hid_t fapl, int align, unsigned long threshold, unsigned long alignment_len, int meta_collective)
++set_metadata(hid_t fapl, int align, unsigned long threshold, unsigned long alignment_len, int meta_collective,
++             int meta_write_strategy)
+ {
+     hsize_t threshold_o, alignment_len_o;
+     herr_t  ret;
+@@ -904,17 +905,20 @@ set_metadata(hid_t fapl, int align, unsigned long threshold, unsigned long align
+             printf("Collective write: disabled.\n");
+     }
+ 
+-    // Defer metadata flush
+-    if (DEFER_METADATA_FLUSH) {
++    if (DEFER_METADATA_FLUSH || meta_write_strategy >= 0) {
+         H5AC_cache_config_t cache_config;
+         cache_config.version = H5AC__CURR_CACHE_CONFIG_VERSION;
+         H5Pget_mdc_config(fapl, &cache_config);
+-        cache_config.set_initial_size  = 1;
+-        cache_config.initial_size      = 16 * M_VAL;
+-        cache_config.evictions_enabled = 0;
+-        cache_config.incr_mode         = H5C_incr__off;
+-        cache_config.flash_incr_mode   = H5C_flash_incr__off;
+-        cache_config.decr_mode         = H5C_decr__off;
++        if (DEFER_METADATA_FLUSH) {
++            cache_config.set_initial_size  = 1;
++            cache_config.initial_size      = 16 * M_VAL;
++            cache_config.evictions_enabled = 0;
++            cache_config.incr_mode         = H5C_incr__off;
++            cache_config.flash_incr_mode   = H5C_flash_incr__off;
++            cache_config.decr_mode         = H5C_decr__off;
++        }
++        if (meta_write_strategy >= 0)
++            cache_config.metadata_write_strategy = meta_write_strategy;
+         H5Pset_mdc_config(fapl, &cache_config);
+     }
+     return fapl;
+@@ -1026,7 +1030,7 @@ main(int argc, char *argv[])
+     }
+     else {
+         H5Pset_fapl_mpio(fapl, comm, info);
+-        set_metadata(fapl, ALIGN, ALIGN_THRESHOLD, ALIGN_LEN, params.meta_coll);
++        set_metadata(fapl, ALIGN, ALIGN_THRESHOLD, ALIGN_LEN, params.meta_coll, params.meta_write_strategy);
+     }
+ 
+     void *data = _prepare_data(params, &filespace, &memspace, &data_preparation_time, &data_size);

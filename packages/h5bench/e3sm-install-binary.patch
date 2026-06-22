@@ -1,0 +1,17 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -383,6 +383,15 @@ if(H5BENCH_MACSIO)
+     )
+ endif()
++
++if(H5BENCH_E3SM)
++    install(
++        FILES
++        ${CMAKE_BINARY_DIR}/h5bench_e3sm
++        PERMISSIONS WORLD_EXECUTE OWNER_WRITE OWNER_READ
++        DESTINATION bin
++    )
++endif()
+ 
+ # Testing #####################################################################
+ 
