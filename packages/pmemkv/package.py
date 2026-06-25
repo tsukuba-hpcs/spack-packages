@@ -42,7 +42,6 @@ class Pmemkv(CMakePackage):
     depends_on("libpmemobj-cpp@1.8:", when="@1.0.2:")
 
     depends_on("pmdk@master", when="@master")
-    depends_on("pmdk@2:", when="@1.4:")
     depends_on("pmdk@1.8:", when="@1.1:")
     depends_on("pmdk@1.7:", when="@1.0.2:")
 

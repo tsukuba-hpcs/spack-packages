@@ -30,6 +30,7 @@ class LocalityAwareMpiio(BuiltinMpich):
     version("4.3", branch="work-4.3.x", preferred=True, submodules=True)
     version("4.3-debug", branch="work-4.3.x", preferred=False, submodules=True)
     version("4.3-profiler", branch="profiler", preferred=False, submodules=True)
+    version("4.3-sharding", branch="add-sharding", preferred=False, submodules=True)
 
     variant(
         "romio-filesystem",

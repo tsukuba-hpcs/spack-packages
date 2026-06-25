@@ -23,8 +23,6 @@ class LesIo(AutotoolsPackage):
     depends_on('libtool', type=('build'))
     depends_on('pkgconfig', type=('build'))
 
-    filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
-
     def setup_build_environment(self, env):
         env.set("FC", self.spec["mpi"].mpifc, force=True)
         env.set("F77", self.spec["mpi"].mpif77, force=True)
