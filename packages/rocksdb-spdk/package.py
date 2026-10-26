@@ -21,7 +21,7 @@
 # ----------------------------------------------------------------------------
 
 from spack.package import *
-import llnl.util.filesystem as fs
+import spack.util.filesystem as fs
 
 class RocksdbSpdk(MakefilePackage):
     """FIXME: Put a proper description of your package here."""
